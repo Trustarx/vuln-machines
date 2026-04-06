@@ -1,0 +1,7 @@
+services:
+  vuln-api:
+    build: .
+    container_name: api-lab
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
