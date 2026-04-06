@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(export PATH=\"/Applications/Docker.app/Contents/Resources/bin:$PATH\")",
-      "Bash(docker compose:*)"
-    ]
-  }
-}
