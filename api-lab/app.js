@@ -25,6 +25,18 @@ const JWT_SECRET = "secret"; // VULN: weak secret, brutable with hashcat/john
 
 app.use(bodyParser.json());
 
+// Access logger
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const ms = Date.now() - start;
+    const status = res.statusCode;
+    const flag = status >= 200 && status < 300 ? "✅" : status >= 400 ? "❌" : "➡️";
+    console.log(`${flag} ${status} ${req.method} ${req.path} (${ms}ms) ip=${req.ip} body=${JSON.stringify(req.body || {}).slice(0,120)}`);
+  });
+  next();
+});
+
 // ─── Database seed ────────────────────────────────────────────────────────────
 const db = new Database(":memory:");
 
