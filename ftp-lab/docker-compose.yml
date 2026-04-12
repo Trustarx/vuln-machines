@@ -1,0 +1,9 @@
+services:
+  ftp-target:
+    build: .
+    container_name: ftp-lab
+    ports:
+      - "2121:21"    # ProFTPD (avoid macOS conflict on 21)
+      - "8081:80"    # Apache web server
+      - "2222:22"    # SSH (already used by privesc-lab on 2222, use 2223)
+    restart: unless-stopped

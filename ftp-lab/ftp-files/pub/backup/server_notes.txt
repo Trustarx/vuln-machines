@@ -1,0 +1,13 @@
+Server migration notes - Q1 2021
+---------------------------------
+- FTP running ProFTPD on port 21 (config: /etc/proftpd/proftpd.conf)
+- Apache2 on port 80, web root at /var/www/html
+- SSH on port 22
+- Cron maintenance scripts in /opt/maintenance/ (run as root every minute)
+- DB backups go to /var/backups/db/
+
+TODO:
+ [x] Set up anonymous FTP for read-only pub share
+ [ ] Disable mod_copy after migration (currently needed by backup scripts)
+ [ ] Rotate ftpuser password
+ [ ] Move sensitive configs out of /pub/backup

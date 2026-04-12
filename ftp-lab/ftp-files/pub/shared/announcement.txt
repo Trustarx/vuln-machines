@@ -1,0 +1,11 @@
+Staff Announcement - IT Dept
+Date: 2021-02-01
+
+The legacy file server has been updated. Please use the /pub/shared
+directory for team file sharing going forward.
+
+If you need write access to the FTP server, contact IT to get your
+credentials set up.
+
+--
+AcmeCorp IT Department

@@ -1,0 +1,28 @@
+# AcmeCorp Web Server Config Backup
+# Generated: 2021-03-14 by backup script
+# DO NOT DISTRIBUTE
+
+[database]
+host=localhost
+port=3306
+name=acmecorp_db
+user=dbadmin
+pass=S3cur3DB2019!
+
+[ftp]
+# Local FTP service account
+user=ftpuser
+pass=Welc0me2Acme!
+
+[web]
+root=/var/www/html
+port=80
+
+[ssh]
+port=22
+allow_users=ftpuser sysadmin
+
+[notes]
+# sysadmin account disabled, use ftpuser for day-to-day tasks
+# TODO: migrate away from FTP to SFTP (low priority)
+# Web root is /var/www/html - Apache serving on port 80
