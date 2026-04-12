@@ -1,0 +1,27 @@
+services:
+  web:
+    build: .
+    container_name: sqli-lab-web
+    ports:
+      - "8082:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    container_name: sqli-lab-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: acmecorp
+      MYSQL_USER: acmecorp
+      MYSQL_PASSWORD: acmecorp123
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
