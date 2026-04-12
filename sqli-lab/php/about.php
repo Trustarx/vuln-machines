@@ -1,4 +1,7 @@
-<?php $page_title = "About — OutForm Letter Services"; include 'includes/header.php'; ?>
+<?php
+require_once 'includes/referrer_check.php';
+require_referrer(null);
+$page_title = "About — OutForm Letter Services"; include 'includes/header.php'; ?>
 <h4 class="section-title">ℹ️ About OutForm</h4>
 <div class="card" style="border-top: 4px solid #f26522;">
     <div class="card-body">

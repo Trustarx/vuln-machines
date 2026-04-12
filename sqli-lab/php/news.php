@@ -1,4 +1,6 @@
 <?php
+require_once 'includes/referrer_check.php';
+require_referrer(null); // must come from same host
 $page_title = "Dispatched Letters — OutForm";
 include 'includes/header.php';
 

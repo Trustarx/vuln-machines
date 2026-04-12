@@ -5,48 +5,10 @@
 // VULN 2: Time-based blind SQL injection in search parameter
 // ============================================================
 
-// VULN 1: Referrer check — only allows access from news.php
-// The error message intentionally leaks the required referrer.
-$required_referrer = 'news.php';
-$referrer = $_SERVER['HTTP_REFERER'] ?? '';
-
-if (strpos($referrer, $required_referrer) === false) {
-    http_response_code(403);
-    ?>
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Access Denied — OutForm Portal</title>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-        <style>
-            body { background: #fff3ee; }
-            .box { max-width: 560px; margin: 80px auto; }
-            .brand { color: #f26522; font-weight: 800; font-size: 20px; margin-bottom: 20px; display:block; }
-        </style>
-    </head>
-    <body>
-    <div class="box">
-        <span class="brand">✉️ OutForm</span>
-        <div class="alert" style="border-left: 5px solid #f26522; background:#fff; border-radius:6px;">
-            <h5 style="color:#c94e0e;">⛔ Access Denied</h5>
-            <p>Direct access to the Author Directory is not permitted.</p>
-            <p>This page may only be accessed via the letters portal.</p>
-            <hr>
-            <p class="mb-1"><strong>Required referrer:</strong></p>
-            <code>http://<?= $_SERVER['HTTP_HOST'] ?>/news.php</code>
-            <hr>
-            <small class="text-muted">
-                If you believe this is an error, please contact
-                <a href="mailto:support@outform.co.uk" style="color:#f26522;">support@outform.co.uk</a>.
-            </small>
-        </div>
-        <a href="../index.php" class="btn btn-sm" style="background:#f26522;color:#fff;">&larr; Back to Portal Home</a>
-    </div>
-    </body>
-    </html>
-    <?php
-    exit();
-}
+// VULN 1: Referrer check — must come from news.php specifically
+// The required referrer is NOT shown on the page but leaks in browser console.log
+require_once '../includes/referrer_check.php';
+require_referrer('news.php');
 
 // Passed referrer check — load the page
 $page_title = "Staff Directory — AcmeCorp Intranet";

@@ -1,4 +1,6 @@
 <?php
+require_once 'includes/referrer_check.php';
+require_referrer(null); // homepage: allow direct access or same-host
 $page_title = "OutForm — Letter Services Portal";
 include 'includes/header.php';
 ?>
