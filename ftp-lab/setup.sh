@@ -55,9 +55,10 @@ h1{color:#2c3e50}p{color:#666}.footer{margin-top:60px;font-size:12px;color:#aaa}
 </html>
 HTML
 
-# www-data owns web root — proftpd running as www-data can write here
+# www-data owns web root; group-writable (775) so ftpuser (in www-data group)
+# can write here via mod_copy — that's the intended exploitation path
 chown -R www-data:www-data /var/www/html
-chmod 755 /var/www/html
+chmod 775 /var/www/html
 
 # ── ProFTPD config ───────────────────────────────────────────
 echo "[+] Configuring ProFTPD"
