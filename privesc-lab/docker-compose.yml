@@ -4,7 +4,7 @@ services:
     container_name: privesc-lab
     ports:
       - "8080:8080"   # Vulnerable web app
-      - "2222:22"     # SSH access
+      - "2223:22"     # SSH access
     cap_add:
       - SYS_PTRACE    # Allow debugging for realistic privesc
     security_opt:
