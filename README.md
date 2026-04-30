@@ -1,77 +1,179 @@
 # Vuln Machines
 
-Intentionally vulnerable Docker targets for pentesting practice.
+Intentionally vulnerable Docker targets for pentesting practice — built and maintained by Trustarx.
 
 > ⚠️ **FOR EDUCATIONAL USE ONLY** — run locally or on an isolated network. Never expose to the internet.
 
-## Machines
+Each lab is a self-contained Docker Compose stack. Every lab folder contains a `SOLUTION.md` with full step-by-step exploitation instructions.
 
-| Machine | Focus | Ports |
-|---------|-------|-------|
-| [privesc-lab](./privesc-lab/) | Command injection → Linux privilege escalation (6 vectors) | 8080, 2222 |
-| [api-lab](./api-lab/) | REST API: IDOR, mass assignment, JWT alg:none, weak secret, broken auth, SQLi | 3000 |
-| [msf-lab](./msf-lab/) | Metasploit practice: vsftpd 2.3.4 backdoor, Shellshock CGI, distcc RCE | 2121, 6200, 8888, 3632 |
-| [crypto-lab](./crypto-lab/) | JWT weak secret, alg:none, OAuth open redirect, AES-ECB cookie forgery | 5001 |
+---
 
-## Quick Start
+## Machines at a glance
 
-Each machine is self-contained. From any machine directory:
+| Machine | Focus | Difficulty | Ports |
+|---|---|---|---|
+| [privesc-lab](./privesc-lab/) | Command injection → 6 Linux privesc vectors | Easy–Medium | 8080, **2223** (SSH) |
+| [api-lab](./api-lab/) | REST API: IDOR, mass assignment, JWT, SQLi | Medium | 3000 |
+| [msf-lab](./msf-lab/) | Metasploit practice: vsftpd, Shellshock, distcc | Easy | **2122** (FTP), 6200, 8888, 3632 |
+| [crypto-lab](./crypto-lab/) | JWT alg:none/weak secret, AES-ECB, OAuth | Medium–Hard | 5001 |
+| [ftp-lab](./ftp-lab/) | Anonymous FTP → ProFTPD `mod_copy` (CVE-2015-3306) → root | Medium | 2121, 8081, 2222 (SSH) |
+| [sqli-lab](./sqli-lab/) | Referrer bypass + time-based blind SQLi (PHP/MySQL) | Medium | 8082 |
+
+> **Port allocation note:** ports were chosen to avoid collisions when running all six labs simultaneously. ftp-lab owns FTP/2121 and SSH/2222; the others have been moved to 2122 (msf-lab FTP) and 2223 (privesc-lab SSH).
+
+---
+
+## Quick start
 
 ```bash
-docker compose up --build -d
-```
+# Single lab
+cd <machine-dir>
+docker compose up -d --build
 
-To run all machines at once:
-
-```bash
-for dir in privesc-lab api-lab msf-lab crypto-lab; do
-  (cd $dir && docker compose up --build -d)
+# All six at once
+for dir in privesc-lab api-lab msf-lab crypto-lab ftp-lab sqli-lab; do
+  (cd $dir && docker compose up -d --build)
 done
 ```
 
-## Machine Details
+To run on a LAN-accessible machine and let teammates connect, set `MASQ_ADDR` for ftp-lab so PASV advertises the right IP:
+```bash
+MASQ_ADDR=10.0.1.50 docker compose -f ftp-lab/docker-compose.yml up -d
+```
 
-### privesc-lab — `http://localhost:8080`
-Entry via command injection in a Flask web app. Six privesc paths to root:
-- SUID `find`, writable cron job, `sudo vim`, writable `/etc/passwd`, readable root SSH key, `CAP_SETUID` on python3
+---
 
-SSH access: `ssh webuser@localhost -p 2222` (password: `websecure123`)
+## Machine details
 
-### api-lab — `http://localhost:3000`
-REST API built with Node.js/Express + SQLite. Vulnerabilities:
-- IDOR on `/api/users/:id` and `/api/users/:id/notes`
-- Mass assignment via `PUT /api/users/:id` (set `role: "admin"`)
-- JWT alg:none bypass + weak HS256 secret (`secret`)
-- Broken admin check — any valid token reaches `/api/admin/flag`
-- SQLi in `GET /api/products/search?q=`
+### 1. privesc-lab — `http://<target>:8080`
+Linux privilege escalation training ground. You start with command injection in a Flask "ping" app and work your way to root via any of six independent vectors.
 
-### msf-lab — Multi-port
-Three Metasploit reverse shell vectors:
+**Vulnerabilities:**
+- Command injection in `/ping` (`shell=True` with unsanitised input)
+- Information disclosure via `/debug`
+- Six privesc paths to root: SUID `find`, writable cron, `sudo vim`, writable `/etc/passwd`, readable root SSH key, `CAP_SETUID` on python3
+
+**Tools to practice:** Burp Suite, manual command injection, LinPEAS, GTFOBins  
+**SSH:** `ssh webuser@<target> -p 2223` (password: `websecure123`)  
+**Solution:** [`privesc-lab/SOLUTION.md`](./privesc-lab/SOLUTION.md)
+
+---
+
+### 2. api-lab — `http://<target>:3000`
+Modern REST API security. Node.js/Express + SQLite. Built around OWASP API Top 10 issues.
+
+**Vulnerabilities:**
+- **IDOR** on `/api/users/:id` and `/api/users/:id/notes` — view any user's PII, password hash, API key
+- **Mass assignment** via `PUT /api/users/:id` — set `role: "admin"` from a normal account
+- **JWT alg:none** — forge unsigned admin tokens
+- **JWT weak HS256 secret** (`secret`) — crack with hashcat in seconds
+- **Broken admin check** — middleware only verifies token presence, not role
+- **SQL injection** in `GET /api/products/search?q=` (SQLite, raw template literal)
+
+**Tools to practice:** Burp, ffuf, hashcat (mode 16500), sqlmap, jwt_tool  
+**Solution:** [`api-lab/SOLUTION.md`](./api-lab/SOLUTION.md)
+
+---
+
+### 3. msf-lab — Multi-port
+Classic Metasploit-friendly machine with three independent RCE vectors. Great for first-time MSF users or for proving live exploits without writing custom code.
 
 | Exploit | MSF Module | Port |
-|---------|-----------|------|
-| vsftpd 2.3.4 backdoor | `exploit/unix/ftp/vsftpd_234_backdoor` | 2121 (shell on 6200) |
-| Shellshock CGI | `exploit/multi/http/apache_mod_cgi_bash_env_exec` | 8888 |
-| distcc RCE | `exploit/unix/misc/distcc_exec` | 3632 |
+|---|---|---|
+| vsftpd 2.3.4 backdoor (CVE-2011-2523) | `exploit/unix/ftp/vsftpd_234_backdoor` | 2122 (callback shell on 6200) |
+| Shellshock CGI (CVE-2014-6271) | `exploit/multi/http/apache_mod_cgi_bash_env_exec` | 8888 |
+| distcc RCE (CVE-2004-2687) | `exploit/unix/misc/distcc_exec` | 3632 |
 
-### crypto-lab — `http://localhost:5001`
-Simulated company internal portal (AcmeCorp v2.3). Vulnerabilities:
-- JWT HS256 weak secret (`corp2024`) — crack with hashcat: `hashcat -a 0 -m 16500 <jwt> rockyou.txt`
-- JWT alg:none — forge admin token with no signature
-- JWT role claim trusted from token — change `"role":"admin"` to escalate
-- OAuth open redirect — `redirect_uri` validated with `startswith()` only
-- OAuth missing state — CSRF on the OAuth flow
-- AES-ECB encrypted session cookie — block replay to forge admin role
-- `/api/debug` leaks cipher mode and key length
+**Tools to practice:** msfconsole, nmap NSE scripts, manual netcat triggers  
+**Solution:** [`msf-lab/SOLUTION.md`](./msf-lab/SOLUTION.md)
+
+---
+
+### 4. crypto-lab — `http://<target>:5001`
+"AcmeCorp Internal Portal v2.3" — a Python/Flask app demonstrating real-world JWT, AES, and OAuth flaws.
+
+**Vulnerabilities:**
+- **JWT alg:none** — `decode_jwt()` skips signature verification when alg is `"none"`
+- **JWT weak HS256 secret** (`corp2024`) — crack with hashcat
+- **Role claim from token** — payload's `role` claim is trusted as authoritative
+- **OAuth open redirect** — `redirect_uri` validated only with `startswith()`
+- **OAuth missing state** — CSRF in the auth code grant flow
+- **AES-128-ECB session cookie** — `session_role=AES_ECB(user=...|role=...|dept=...)` susceptible to block-swap forgery
+- **/api/debug** leaks `jwt_algo`, `aes_mode: ECB`, `aes_keylen: 128`
+- **IDOR** on `/api/users/<id>`
+
+**Tools to practice:** jwt_tool, hashcat (16500), pycryptodome, Burp Repeater for ECB block manipulation  
+**Solution:** [`crypto-lab/SOLUTION.md`](./crypto-lab/SOLUTION.md)
+
+---
+
+### 5. ftp-lab — Anonymous FTP + ProFTPD mod_copy (CVE-2015-3306)
+Realistic chained attack. Anonymous FTP leaks the next-stage credentials, which unlock ProFTPD's `mod_copy` module to plant a PHP webshell in the Apache web root, leading to a www-data shell — then privesc to root.
+
+**Vulnerabilities:**
+- Anonymous FTP read on `/var/ftp/pub` containing a leaked `config.bak` with cleartext credentials
+- ProFTPD `mod_copy` enabled (SITE CPFR / SITE CPTO) — server-side file copy as authenticated user
+- ftpuser is in the `www-data` group, web root is group-writable → write a PHP shell into `/var/www/html`
+- Writable cron script (`/opt/maintenance/cleanup.sh`) runs as root every minute
+- `ftpuser ALL=(root) NOPASSWD: /usr/bin/vim` — sudo misconfig
+
+**Network notes:** PASV uses port range `60000-60100`. If running on a LAN, set `MASQ_ADDR=<host-ip>` before `docker compose up`.
+
+**Tools to practice:** ftp/lftp, Burp/curl, Metasploit (`exploit/unix/ftp/proftpd_modcopy_exec`), GTFOBins for vim sudo  
+**Solution:** [`ftp-lab/SOLUTION.md`](./ftp-lab/SOLUTION.md)
+
+---
+
+### 6. sqli-lab — `http://<target>:8082`
+PHP + MySQL portal ("OutForm Letter Services") protected by a referrer-based access control. The referrer requirement is leaked in a browser `console.log`, and the protected page contains a clean time-based blind SQLi point that leads to cleartext admin credentials.
+
+**Vulnerabilities:**
+- Referrer-based access control on every page; required referrer leaked via `console.log` in the 403 response (visible in DevTools, **not** rendered on the page)
+- Time-based blind SQL injection on `?id=` (integer interpolation, single-row query → exactly one `SLEEP()` per request)
+- Cleartext password storage in the `users` table
+
+**Tools to practice:** Burp Suite (Referer header tampering), DevTools console, sqlmap (with `--referer`), or hand-rolled Python extraction script  
+**Solution:** [`sqli-lab/SOLUTION.md`](./sqli-lab/SOLUTION.md)
+
+---
 
 ## Stopping
 
 ```bash
-# Stop a single machine
+# Single lab
 cd <machine-dir> && docker compose down
 
-# Stop all
-for dir in privesc-lab api-lab msf-lab crypto-lab; do
+# All
+for dir in privesc-lab api-lab msf-lab crypto-lab ftp-lab sqli-lab; do
   (cd $dir && docker compose down)
 done
 ```
+
+---
+
+## Repository layout
+```
+vuln-machines/
+├── README.md                ← this file
+├── privesc-lab/
+│   ├── docker-compose.yml
+│   ├── Dockerfile
+│   ├── app.py
+│   ├── setup-vulns.sh
+│   └── SOLUTION.md
+├── api-lab/                 ← Node.js REST API + SQLite
+├── msf-lab/                 ← Python services simulating classic CVEs
+├── crypto-lab/              ← Flask app: JWT/OAuth/AES-ECB
+├── ftp-lab/                 ← ProFTPD + Apache + SSH
+└── sqli-lab/                ← PHP + MySQL (OutForm portal)
+```
+
+Every lab folder contains its own Dockerfile, compose file, source, setup scripts, and a step-by-step `SOLUTION.md` for the team.
+
+---
+
+## Maintainer notes
+
+- All ports were chosen to avoid collisions when running every lab simultaneously — see the table at the top.
+- Solutions are **not obfuscated** — these are training labs, not CTF challenges. The `SOLUTION.md` files are the canonical reference for what each machine teaches.
+- If you find a lab where the documented solution path no longer works (e.g. a SLEEP payload that doesn't sleep, or a directory listing that doesn't list), open an issue — the lab is broken, not the test.
