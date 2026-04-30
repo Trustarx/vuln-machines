@@ -10,6 +10,6 @@ RUN chmod +x /setup.sh && /setup.sh
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 21 80 22
+EXPOSE 21 80 22 60000-60100
 
 ENTRYPOINT ["/entrypoint.sh"]

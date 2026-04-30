@@ -2,8 +2,14 @@ services:
   ftp-target:
     build: .
     container_name: ftp-lab
+    environment:
+      # The IP clients should connect to for PASV data channels.
+      # Override on the command line if your lab machine has a different IP:
+      #   MASQ_ADDR=10.0.1.50 docker compose up -d
+      MASQ_ADDR: ${MASQ_ADDR:-127.0.0.1}
     ports:
-      - "2121:21"    # ProFTPD (avoid macOS conflict on 21)
-      - "8081:80"    # Apache web server
-      - "2222:22"    # SSH (already used by privesc-lab on 2222, use 2223)
+      - "2121:21"          # ProFTPD control channel
+      - "8081:80"          # Apache web server
+      - "2222:22"          # SSH
+      - "60000-60100:60000-60100"   # ProFTPD PASV data channels
     restart: unless-stopped
