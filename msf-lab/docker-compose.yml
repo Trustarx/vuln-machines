@@ -3,7 +3,7 @@ services:
     build: .
     container_name: msf-lab
     ports:
-      - "2121:21"      # vsftpd 2.3.4 (use 2121 to avoid macOS FTP conflict)
+      - "2122:21"      # vsftpd 2.3.4 (use 2122 to avoid conflict with ftp-lab)
       - "6200:6200"    # vsftpd backdoor shell
       - "8888:80"      # Shellshock CGI
       - "3632:3632"    # distcc RCE
