@@ -18,6 +18,7 @@ Each lab is a self-contained Docker Compose stack. Every lab folder contains a `
 | [crypto-lab](./crypto-lab/) | JWT alg:none/weak secret, AES-ECB, OAuth | Medium–Hard | 5001 |
 | [ftp-lab](./ftp-lab/) | Anonymous FTP → ProFTPD `mod_copy` (CVE-2015-3306) → root | Medium | 2121, 8081, 2222 (SSH) |
 | [sqli-lab](./sqli-lab/) | Referrer bypass + time-based blind SQLi (PHP/MySQL) | Medium | 8082 |
+| [ssrf-lab](./ssrf-lab/) | SSRF blacklist bypass → AWS IMDS metadata + internal admin pivot | Medium | 8090 |
 
 > **Port allocation note:** ports were chosen to avoid collisions when running all six labs simultaneously. ftp-lab owns FTP/2121 and SSH/2222; the others have been moved to 2122 (msf-lab FTP) and 2223 (privesc-lab SSH).
 
@@ -31,7 +32,7 @@ cd <machine-dir>
 docker compose up -d --build
 
 # All six at once
-for dir in privesc-lab api-lab msf-lab crypto-lab ftp-lab sqli-lab; do
+for dir in privesc-lab api-lab msf-lab crypto-lab ftp-lab sqli-lab ssrf-lab; do
   (cd $dir && docker compose up -d --build)
 done
 ```
@@ -137,6 +138,21 @@ PHP + MySQL portal ("OutForm Letter Services") protected by a referrer-based acc
 
 ---
 
+### 7. ssrf-lab — `http://<target>:8090`
+"PaperPress Document Rendering" — a Flask service that fetches a user-supplied URL server-side. Three-service lab: the public renderer plus a mock AWS EC2 metadata service and an internal admin panel, both reachable only via SSRF.
+
+**Vulnerabilities:**
+- **SSRF** in `/api/render?url=` with a substring-based blacklist (blocks `127.0.0.1`, `localhost`, `169.254.169.254`)
+- **Bypass via docker DNS** — internal hostnames `metadata`, `aws-metadata.internal`, `admin`, `admin.internal` aren't in the blacklist
+- **AWS IMDSv1 simulation** — leaks IAM role credentials and cloud-init user-data (DB password, admin API key)
+- **Header-trust auth** — the internal admin panel trusts `X-Forwarded-For` claiming an RFC1918 address, AND any request with no XFF (which is exactly what an SSRF-driven request looks like)
+- **Bonus:** regex-based command whitelist on `/admin/exec` is anchored only at the start → shell injection via `;` / `&&`
+
+**Tools to practice:** Burp Repeater (URL fuzzing), curl, awareness of cloud metadata services, AWS CLI with stolen creds  
+**Solution:** [`ssrf-lab/SOLUTION.md`](./ssrf-lab/SOLUTION.md)
+
+---
+
 ## Stopping
 
 ```bash
@@ -144,7 +160,7 @@ PHP + MySQL portal ("OutForm Letter Services") protected by a referrer-based acc
 cd <machine-dir> && docker compose down
 
 # All
-for dir in privesc-lab api-lab msf-lab crypto-lab ftp-lab sqli-lab; do
+for dir in privesc-lab api-lab msf-lab crypto-lab ftp-lab sqli-lab ssrf-lab; do
   (cd $dir && docker compose down)
 done
 ```
@@ -165,7 +181,8 @@ vuln-machines/
 ├── msf-lab/                 ← Python services simulating classic CVEs
 ├── crypto-lab/              ← Flask app: JWT/OAuth/AES-ECB
 ├── ftp-lab/                 ← ProFTPD + Apache + SSH
-└── sqli-lab/                ← PHP + MySQL (OutForm portal)
+├── sqli-lab/                ← PHP + MySQL (OutForm portal)
+└── ssrf-lab/                ← Flask + mock AWS IMDS + internal admin (PaperPress)
 ```
 
 Every lab folder contains its own Dockerfile, compose file, source, setup scripts, and a step-by-step `SOLUTION.md` for the team.

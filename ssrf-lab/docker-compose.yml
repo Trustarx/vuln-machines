@@ -1,0 +1,40 @@
+services:
+  web:
+    build: ./services/web
+    container_name: ssrf-lab-web
+    ports:
+      - "8090:5000"     # Public-facing PaperPress UI
+    networks:
+      public:
+      internal:
+    depends_on:
+      - metadata
+      - admin
+    restart: unless-stopped
+
+  metadata:
+    build: ./services/metadata
+    container_name: ssrf-lab-metadata
+    # Reachable only on the internal docker network as `metadata`
+    networks:
+      internal:
+        aliases:
+          - metadata
+          - aws-metadata.internal
+    restart: unless-stopped
+
+  admin:
+    build: ./services/internal-admin
+    container_name: ssrf-lab-admin
+    # Reachable only on the internal docker network as `admin`
+    networks:
+      internal:
+        aliases:
+          - admin
+          - admin.internal
+    restart: unless-stopped
+
+networks:
+  public:
+  internal:
+    internal: true       # No outbound internet — forces SSRF chain to stay inside
