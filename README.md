@@ -19,6 +19,7 @@ Each lab is a self-contained Docker Compose stack. Every lab folder contains a `
 | [ftp-lab](./ftp-lab/) | Anonymous FTP → ProFTPD `mod_copy` (CVE-2015-3306) → root | Medium | 2121, 8081, 2222 (SSH) |
 | [sqli-lab](./sqli-lab/) | Referrer bypass + time-based blind SQLi (PHP/MySQL) | Medium | 8082 |
 | [ssrf-lab](./ssrf-lab/) | SSRF blacklist bypass → AWS IMDS metadata + internal admin pivot | Medium | 8090 |
+| [wp-lab](./wp-lab/) | WordPress: user enum + xmlrpc brute → plugin upload RCE | Medium | 8091 |
 
 > **Port allocation note:** ports were chosen to avoid collisions when running all six labs simultaneously. ftp-lab owns FTP/2121 and SSH/2222; the others have been moved to 2122 (msf-lab FTP) and 2223 (privesc-lab SSH).
 
@@ -32,7 +33,7 @@ cd <machine-dir>
 docker compose up -d --build
 
 # All six at once
-for dir in privesc-lab api-lab msf-lab crypto-lab ftp-lab sqli-lab ssrf-lab; do
+for dir in privesc-lab api-lab msf-lab crypto-lab ftp-lab sqli-lab ssrf-lab wp-lab; do
   (cd $dir && docker compose up -d --build)
 done
 ```
@@ -153,6 +154,22 @@ PHP + MySQL portal ("OutForm Letter Services") protected by a referrer-based acc
 
 ---
 
+### 8. wp-lab — `http://<target>:8091`
+"MidwestRealty Properties" — a stock WordPress 5.8 site with three users and the kind of config that bites real-world deployments. Multi-step engagement that mirrors the typical WPScan → Burp → Metasploit kill chain.
+
+**Vulnerabilities:**
+- **User enumeration** via `/wp-json/wp/v2/users/` (returns slug, display name) and the `?author=N` redirect leak
+- **`xmlrpc.php` enabled** with no rate limiting — `wp.getUsersBlogs` is a clean login oracle
+- **`system.multicall` amplification mitigation** — WP 4.4+ patched the classic batched-attempts trick. The lab teaches you to recognise the patch and fall back to single requests
+- **Weak admin password** (`Welcome123!`) — top-1000 list, crackable in seconds
+- **Authenticated plugin upload** — any admin can upload a zip plugin, which runs PHP under `www-data`. A 3-line PHP shell + `zip` is the entire payload
+- **Flag** at `/flag.txt`, readable once you have a webshell
+
+**Tools to practice:** WPScan (`-e u`, `--passwords rockyou.txt`), Burp Suite (form replay), Metasploit (`exploit/unix/webapp/wp_admin_shell_upload`), or hand-rolled Python  
+**Solution:** [`wp-lab/SOLUTION.md`](./wp-lab/SOLUTION.md)
+
+---
+
 ## Stopping
 
 ```bash
@@ -160,7 +177,7 @@ PHP + MySQL portal ("OutForm Letter Services") protected by a referrer-based acc
 cd <machine-dir> && docker compose down
 
 # All
-for dir in privesc-lab api-lab msf-lab crypto-lab ftp-lab sqli-lab ssrf-lab; do
+for dir in privesc-lab api-lab msf-lab crypto-lab ftp-lab sqli-lab ssrf-lab wp-lab; do
   (cd $dir && docker compose down)
 done
 ```
@@ -182,7 +199,8 @@ vuln-machines/
 ├── crypto-lab/              ← Flask app: JWT/OAuth/AES-ECB
 ├── ftp-lab/                 ← ProFTPD + Apache + SSH
 ├── sqli-lab/                ← PHP + MySQL (OutForm portal)
-└── ssrf-lab/                ← Flask + mock AWS IMDS + internal admin (PaperPress)
+├── ssrf-lab/                ← Flask + mock AWS IMDS + internal admin (PaperPress)
+└── wp-lab/                  ← WordPress 5.8 + MariaDB (MidwestRealty Properties)
 ```
 
 Every lab folder contains its own Dockerfile, compose file, source, setup scripts, and a step-by-step `SOLUTION.md` for the team.

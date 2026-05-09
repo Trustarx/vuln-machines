@@ -1,0 +1,35 @@
+services:
+  db:
+    image: mariadb:10.5
+    container_name: wp-lab-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: WpDb!Pass2024
+    volumes:
+      - wpdb:/var/lib/mysql
+    restart: unless-stopped
+
+  web:
+    build: .
+    container_name: wp-lab-web
+    ports:
+      - "8091:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: WpDb!Pass2024
+      WORDPRESS_DB_NAME: wordpress
+      WP_SITE_URL: "http://localhost:8091"
+      WP_ADMIN_USER: "admin"
+      WP_ADMIN_PASS: "Welcome123!"
+    volumes:
+      - wpdata:/var/www/html
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  wpdata:
+  wpdb:
