@@ -24,6 +24,16 @@ services:
       WP_SITE_URL: "http://localhost:8091"
       WP_ADMIN_USER: "admin"
       WP_ADMIN_PASS: "Welcome123!"
+      # Dynamically rewrite WP_HOME/WP_SITEURL from the request Host header so
+      # the lab works regardless of where you reach it from (localhost, LAN IP,
+      # docker-host hostname, etc). Without this, WordPress emits hardcoded
+      # localhost:8091 URLs in every link / CSS / script tag.
+      WORDPRESS_CONFIG_EXTRA: |
+        if (!empty($$_SERVER['HTTP_HOST'])) {
+            $$proto = (!empty($$_SERVER['HTTPS']) && $$_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            define('WP_HOME',    $$proto . '://' . $$_SERVER['HTTP_HOST']);
+            define('WP_SITEURL', $$proto . '://' . $$_SERVER['HTTP_HOST']);
+        }
     volumes:
       - wpdata:/var/www/html
     depends_on:

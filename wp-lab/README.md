@@ -29,6 +29,13 @@ the init script installs WordPress, creates the users, sets pretty
 permalinks, and publishes one post per user (so they all appear in the
 REST API enumeration).
 
+**Reaching the lab from another machine on the LAN:** WordPress will
+auto-rewrite all emitted URLs (links, CSS, JS, REST self-links) to
+match the request's `Host` header — so hitting `http://<host-ip>:8091/`
+from a peer on the network works without any extra config. The
+`WORDPRESS_CONFIG_EXTRA` block in `docker-compose.yml` defines
+`WP_HOME` / `WP_SITEURL` from `$_SERVER['HTTP_HOST']` at request time.
+
 ## Lab properties
 
 - WordPress 5.8.x with default config (xmlrpc enabled, REST API

