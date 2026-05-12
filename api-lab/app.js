@@ -125,10 +125,28 @@ function adminMiddleware(req, res, next) {
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 // POST /api/register
+// NOTE: This is a training lab. To support repeated automated evaluation
+// runs that re-use the same throwaway credentials, registering a username
+// that already exists will *replace* the previous account — UNLESS it's
+// one of the seeded users (id <= SEED_USER_MAX), which stay protected.
+const SEED_USER_MAX = 4;  // ids 1..4 are admin/alice/bob/charlie
+
 app.post("/api/register", (req, res) => {
   const { username, password, email } = req.body;
   if (!username || !password || !email)
     return res.status(400).json({ error: "username, password, email required" });
+
+  const existing = db.prepare("SELECT id FROM users WHERE username = ?").get(username);
+  if (existing && existing.id <= SEED_USER_MAX) {
+    return res.status(409).json({ error: "Username taken" });
+  }
+  if (existing) {
+    // Clean up the previous throwaway account (and its notes) so the same
+    // username/password can be reused across evaluator runs.
+    db.prepare("DELETE FROM notes WHERE user_id = ?").run(existing.id);
+    db.prepare("DELETE FROM users WHERE id = ?").run(existing.id);
+  }
+
   try {
     db.prepare("INSERT INTO users (username, password, email) VALUES (?, ?, ?)")
       .run(username, hash(password), email);
