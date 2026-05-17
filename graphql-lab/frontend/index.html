@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NebulaCMS — Editorial Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark px-3" style="background:#2d1b4e;">
+  <span class="navbar-brand">🌌 NebulaCMS</span>
+  <div id="nav-user" class="text-white small"></div>
+</nav>
+
+<div class="container py-4">
+  <div id="view-auth" class="row">
+    <div class="col-md-6 mx-auto">
+      <div class="card">
+        <div class="card-body">
+          <ul class="nav nav-tabs mb-3">
+            <li class="nav-item"><a class="nav-link active" id="tab-login" href="#" onclick="App.tab('login')">Login</a></li>
+            <li class="nav-item"><a class="nav-link" id="tab-register" href="#" onclick="App.tab('register')">Register</a></li>
+          </ul>
+
+          <div id="form-login">
+            <input id="li-user" class="form-control mb-2" placeholder="Username">
+            <input id="li-pass" type="password" class="form-control mb-3" placeholder="Password">
+            <button class="btn btn-primary w-100" onclick="App.login()">Sign in</button>
+          </div>
+
+          <div id="form-register" class="d-none">
+            <input id="rg-user" class="form-control mb-2" placeholder="Username">
+            <input id="rg-email" class="form-control mb-2" placeholder="Email">
+            <input id="rg-pass" type="password" class="form-control mb-3" placeholder="Password">
+            <button class="btn btn-primary w-100" onclick="App.register()">Create account</button>
+          </div>
+
+          <p id="auth-err" class="text-danger small mt-2"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-app" class="d-none">
+    <h5>My articles</h5>
+    <div id="article-list"></div>
+    <button class="btn btn-sm btn-outline-secondary mt-3" onclick="App.logout()">Logout</button>
+  </div>
+</div>
+
+<script src="/js/config.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
