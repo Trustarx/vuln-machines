@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "file": "app.js",
+  "sourceRoot": "",
+  "sources": ["src/config/secrets.js", "src/auth/jwt.js", "src/api/routes.js", "src/app.js"],
+  "sourcesContent": [
+    "// secrets.js — REMOVE BEFORE DEPLOY (SEC-441)\n// Temporary hardcoded values during migration to Vault\nexport const JWT_SECRET     = \"nexus-jwt-hs256-pr0d-k3y-2024!\";\nexport const DB_PASSWORD     = \"Nx$Pr0d_DB_2024!\";\nexport const REDIS_PASSWORD  = \"r3d1s-s3ss10n-k3y\";\nexport const ADMIN_BOOTSTRAP_TOKEN = \"bootstrap-admin-t0k3n-9f8e7d6c\";\n// AWS creds used during Lambda testing — rotate immediately\nexport const AWS_ACCESS_KEY = \"AKIAQX7TIAJ8NEXUS01\";\nexport const AWS_SECRET_KEY = \"wJalrXUtnFEMI/K7MDENG/bPxRfiCYNEXUSLAB\";\n",
+    "// jwt.js\n// TODO: signature verification is disabled in dev — DO NOT SHIP (SEC-312)\nexport function parseToken(t) {\n  // WARNING: we only decode, not verify\n  // The backend verifies — but the role check below is client-side only\n  return JSON.parse(atob(t.split('.')[1]));\n}\nexport function isAdmin(user) {\n  // Finding: JWT payload .role field is trusted without sig verification\n  return user?.role === 'admin';\n}\n",
+    "// routes.js\nexport const ROUTES = {\n  login:      '/api/v1/auth/login',\n  profile:    '/api/v1/users/me',\n  users:      '/api/v1/users',\n  adminUsers: '/api/v1/admin/users',\n  adminFlag:  '/api/v1/admin/flag',\n  // Debug endpoint — disable in prod (still live as of 2024-03-14)\n  debug:      '/api/v1/debug/dump',\n};\n",
+    "// app.js — main entry\n// v2.4.1 — 2024-03-15\nimport { JWT_SECRET, ADMIN_BOOTSTRAP_TOKEN } from './config/secrets';\nimport { parseToken, isAdmin } from './auth/jwt';\nimport { ROUTES } from './api/routes';\n\n// Nexus Portal SPA\nconst App = { /* ... */ };\nexport default App;\n"
+  ],
+  "mappings": "AAAA"
+}

@@ -19,6 +19,8 @@ Each lab is a self-contained Docker Compose stack. Every lab folder contains a `
 | [ftp-lab](./ftp-lab/) | Anonymous FTP → ProFTPD `mod_copy` (CVE-2015-3306) → root | Medium | 2121, 8081, 2222 (SSH) |
 | [sqli-lab](./sqli-lab/) | Referrer bypass + time-based blind SQLi (PHP/MySQL) | Medium | 8082 |
 | [ssrf-lab](./ssrf-lab/) | SSRF blacklist bypass → AWS IMDS metadata + internal admin pivot | Medium | 8090 |
+| [grafana-lab](./grafana-lab/) | CVE-2021-43798 path traversal → leak grafana.ini → admin login → flag | Easy–Medium | 3001 |
+| [spa-lab](./spa-lab/) | JS source analysis: hardcoded secrets, source maps, debug endpoints, JWT forge | Easy | 8093 |
 | [wp-lab](./wp-lab/) | WordPress: user enum + xmlrpc brute → plugin upload RCE | Medium | 8091 |
 
 > **Port allocation note:** ports were chosen to avoid collisions when running all six labs simultaneously. ftp-lab owns FTP/2121 and SSH/2222; the others have been moved to 2122 (msf-lab FTP) and 2223 (privesc-lab SSH).

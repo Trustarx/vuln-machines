@@ -1,0 +1,58 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "annotations": { "list": [] },
+  "description": "TeleDash internal ops dashboard",
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Platform Status",
+      "type": "row"
+    },
+    {
+      "datasource": null,
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 1 },
+      "id": 2,
+      "options": {
+        "content": "## TeleDash Monitoring — Internal Ops\n\nPlatform: **production** | Region: **eu-west-1** | Version: **4.2.1**\n\nFor incidents contact `#ops-alerts` on Slack.",
+        "mode": "markdown"
+      },
+      "title": "About",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 3,
+      "title": "Security & Secrets",
+      "type": "row"
+    },
+    {
+      "datasource": null,
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 6 },
+      "id": 4,
+      "options": {
+        "content": "## Credentials Store\n\n| Service | Username | Secret |\n|---|---|---|\n| Grafana admin | `admin` | `T3l3m3trics2021!` |\n| Internal API | `teledash-svc` | `FLAG{grafana_path_traversal_cve_2021_43798}` |\n| RDS (prod) | `teledash_rw` | `Rds!Pr0d#2024` |\n| S3 backup bucket | `AKIAQX7TIAJ8TDLAB01` | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYTELEDASH` |\n\n> **Note:** rotate the internal API key — it was included in a client-side JS bundle in v4.1.0 (see SEC-204)",
+        "mode": "markdown"
+      },
+      "title": "🔑 Credentials — INTERNAL ONLY",
+      "type": "text"
+    }
+  ],
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": ["internal", "ops"],
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "TeleDash Ops",
+  "uid": "teledash-ops-001",
+  "version": 1
+}

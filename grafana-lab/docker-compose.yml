@@ -1,0 +1,17 @@
+services:
+  grafana:
+    image: grafana/grafana:8.2.6
+    container_name: grafana-lab
+    ports:
+      - "3001:3000"      # 3000 taken by api-lab
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=T3l3m3trics2021!
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_PATHS_DATA=/var/lib/grafana
+      - GF_PATHS_LOGS=/var/log/grafana
+      - GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+    volumes:
+      - ./provisioning:/etc/grafana/provisioning
+      - ./grafana.ini:/etc/grafana/grafana.ini
+    restart: unless-stopped
