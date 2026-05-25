@@ -1,0 +1,7 @@
+services:
+  app:
+    build: .
+    container_name: ecom-lab
+    ports:
+      - "8095:8080"
+    restart: unless-stopped
